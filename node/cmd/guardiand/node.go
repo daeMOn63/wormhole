@@ -3,13 +3,14 @@ package guardiand
 import (
 	"context"
 	"fmt"
-	"github.com/certusone/wormhole/node/pkg/notify/discord"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"path"
 	"syscall"
+
+	"github.com/certusone/wormhole/node/pkg/notify/discord"
 
 	"github.com/certusone/wormhole/node/pkg/db"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -96,59 +97,112 @@ var (
 	bigTableKeyPath            *string
 )
 
+const (
+	FlagNetwork      = "network"
+	FlagP2PPort      = "port"
+	FlagP2PBootstrap = "bootstrap"
+
+	FlagStatusAddr = "statusAddr"
+
+	FlagNodeKey = "nodeKey"
+
+	FlagAdminSocketPath = "adminSocket"
+
+	FlagDataDir = "dataDir"
+
+	FlagGuardianKeyPath = "guardianKey"
+
+	FlagEthRPC      = "ethRPC"
+	FlagEthContract = "ethContract"
+
+	FlagBscRPC      = "bscRPC"
+	FlagBscContract = "bscContract"
+
+	FlagTerraWS       = "terraWS"
+	FlagTerraLCD      = "terraLCD"
+	FlagTerraContract = "terraContract"
+
+	FlagSolanaContract = "solanaContract"
+	FlagSolanaWsRPC    = "solanaWS"
+	FlagSolanaRPC      = "solanaRPC"
+
+	FlagLogLevel = "logLevel"
+
+	FlagUnsafeDevMode   = "unsafeDevMode"
+	FlagDevNumGuardians = "devNumGuardians"
+	FlagNodeName        = "nodeName"
+
+	FlagPublicRPC = "publicRPC"
+	FlagPublicWeb = "publicWeb"
+
+	FlagTlsHostname = "tlsHostname"
+	FlagTlsProdEnv  = "tlsProdEnv"
+
+	FlagDisableHeartbeatVerify = "disableHeartbeatVerify"
+
+	FlagDiscordToken   = "discordToken"
+	FlagDiscordChannel = "discordChannel"
+
+	FlagBigTablePersistenceEnabled = "bigTablePersistenceEnabled"
+	FlagBigTableGCPProject         = "bigTableGCPProject"
+	FlagBigTableInstanceName       = "bigTableInstanceName"
+	FlagBigTableTableName          = "bigTableTableName"
+	FlagBigTableKeyPath            = "bigTableKeyPath"
+)
+
 func init() {
-	p2pNetworkID = NodeCmd.Flags().String("network", "/wormhole/dev", "P2P network identifier")
-	p2pPort = NodeCmd.Flags().Uint("port", 8999, "P2P UDP listener port")
-	p2pBootstrap = NodeCmd.Flags().String("bootstrap", "", "P2P bootstrap peers (comma-separated)")
+	p2pNetworkID = NodeCmd.Flags().String(FlagNetwork, "/wormhole/dev", "P2P network identifier")
+	p2pPort = NodeCmd.Flags().Uint(FlagP2PPort, 8999, "P2P UDP listener port")
+	p2pBootstrap = NodeCmd.Flags().String(FlagP2PBootstrap, "", "P2P bootstrap peers (comma-separated)")
 
-	statusAddr = NodeCmd.Flags().String("statusAddr", "[::]:6060", "Listen address for status server (disabled if blank)")
+	statusAddr = NodeCmd.Flags().String(FlagStatusAddr, "[::]:6060", "Listen address for status server (disabled if blank)")
 
-	nodeKeyPath = NodeCmd.Flags().String("nodeKey", "", "Path to node key (will be generated if it doesn't exist)")
+	nodeKeyPath = NodeCmd.Flags().String(FlagNodeKey, "", "Path to node key (will be generated if it doesn't exist)")
 
-	adminSocketPath = NodeCmd.Flags().String("adminSocket", "", "Admin gRPC service UNIX domain socket path")
+	adminSocketPath = NodeCmd.Flags().String(FlagAdminSocketPath, "", "Admin gRPC service UNIX domain socket path")
 
-	dataDir = NodeCmd.Flags().String("dataDir", "", "Data directory")
+	dataDir = NodeCmd.Flags().String(FlagDataDir, "", "Data directory")
 
-	guardianKeyPath = NodeCmd.Flags().String("guardianKey", "", "Path to guardian key (required)")
-	solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
+	guardianKeyPath = NodeCmd.Flags().String(FlagGuardianKeyPath, "", "Path to guardian key (required)")
+	solanaContract = NodeCmd.Flags().String(FlagSolanaContract, "", "Address of the Solana program (required)")
 
-	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
-	ethContract = NodeCmd.Flags().String("ethContract", "", "Ethereum contract address")
+	ethRPC = NodeCmd.Flags().String(FlagEthRPC, "", "Ethereum RPC URL")
+	ethContract = NodeCmd.Flags().String(FlagEthContract, "", "Ethereum contract address")
 
-	bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
-	bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
+	bscRPC = NodeCmd.Flags().String(FlagBscRPC, "", "Binance Smart Chain RPC URL")
+	bscContract = NodeCmd.Flags().String(FlagBscContract, "", "Binance Smart Chain contract address")
 
-	terraWS = NodeCmd.Flags().String("terraWS", "", "Path to terrad root for websocket connection")
-	terraLCD = NodeCmd.Flags().String("terraLCD", "", "Path to LCD service root for http calls")
-	terraContract = NodeCmd.Flags().String("terraContract", "", "Wormhole contract address on Terra blockchain")
+	terraWS = NodeCmd.Flags().String(FlagTerraWS, "", "Path to terrad root for websocket connection")
+	terraLCD = NodeCmd.Flags().String(FlagTerraLCD, "", "Path to LCD service root for http calls")
+	terraContract = NodeCmd.Flags().String(FlagTerraContract, "", "Wormhole contract address on Terra blockchain")
 
-	solanaWsRPC = NodeCmd.Flags().String("solanaWS", "", "Solana Websocket URL (required")
-	solanaRPC = NodeCmd.Flags().String("solanaRPC", "", "Solana RPC URL (required")
+	solanaWsRPC = NodeCmd.Flags().String(FlagSolanaWsRPC, "", "Solana Websocket URL (required)")
+	solanaRPC = NodeCmd.Flags().String(FlagSolanaRPC, "", "Solana RPC URL (required)")
 
-	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
+	logLevel = NodeCmd.Flags().String(FlagLogLevel, "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
-	unsafeDevMode = NodeCmd.Flags().Bool("unsafeDevMode", false, "Launch node in unsafe, deterministic devnet mode")
-	devNumGuardians = NodeCmd.Flags().Uint("devNumGuardians", 5, "Number of devnet guardians to include in guardian set")
-	nodeName = NodeCmd.Flags().String("nodeName", "", "Node name to announce in gossip heartbeats")
+	unsafeDevMode = NodeCmd.Flags().Bool(FlagUnsafeDevMode, false, "Launch node in unsafe, deterministic devnet mode")
+	devNumGuardians = NodeCmd.Flags().Uint(FlagDevNumGuardians, 5, "Number of devnet guardians to include in guardian set")
+	nodeName = NodeCmd.Flags().String(FlagNodeName, "", "Node name to announce in gossip heartbeats")
 
-	publicRPC = NodeCmd.Flags().String("publicRPC", "", "Listen address for public gRPC interface")
-	publicWeb = NodeCmd.Flags().String("publicWeb", "", "Listen address for public REST and gRPC Web interface")
+	publicRPC = NodeCmd.Flags().String(FlagPublicRPC, "", "Listen address for public gRPC interface")
+	publicWeb = NodeCmd.Flags().String(FlagPublicWeb, "", "Listen address for public REST and gRPC Web interface")
 
-	tlsHostname = NodeCmd.Flags().String("tlsHostname", "", "If set, serve publicWeb as TLS with this hostname using Let's Encrypt")
-	tlsProdEnv = NodeCmd.Flags().Bool("tlsProdEnv", false,
+	tlsHostname = NodeCmd.Flags().String(FlagTlsHostname, "", "If set, serve publicWeb as TLS with this hostname using Let's Encrypt")
+	tlsProdEnv = NodeCmd.Flags().Bool(FlagTlsProdEnv, false,
 		"Use the production Let's Encrypt environment instead of staging")
 
-	disableHeartbeatVerify = NodeCmd.Flags().Bool("disableHeartbeatVerify", false,
+	disableHeartbeatVerify = NodeCmd.Flags().Bool(FlagDisableHeartbeatVerify, false,
 		"Disable heartbeat signature verification (useful during network startup)")
 
-	discordToken = NodeCmd.Flags().String("discordToken", "", "Discord bot token (optional)")
-	discordChannel = NodeCmd.Flags().String("discordChannel", "", "Discord channel name (optional)")
+	discordToken = NodeCmd.Flags().String(FlagDiscordToken, "", "Discord bot token (optional)")
+	discordChannel = NodeCmd.Flags().String(FlagDiscordChannel, "", "Discord channel name (optional)")
 
-	bigTablePersistenceEnabled = NodeCmd.Flags().Bool("bigTablePersistenceEnabled", false, "Turn on forwarding events to BigTable")
-	bigTableGCPProject = NodeCmd.Flags().String("bigTableGCPProject", "", "Google Cloud project ID for storing events")
-	bigTableInstanceName = NodeCmd.Flags().String("bigTableInstanceName", "", "BigTable instance name for storing events")
-	bigTableTableName = NodeCmd.Flags().String("bigTableTableName", "", "BigTable table name to store events in")
-	bigTableKeyPath = NodeCmd.Flags().String("bigTableKeyPath", "", "Path to json Service Account key")
+	bigTablePersistenceEnabled = NodeCmd.Flags().Bool(FlagBigTablePersistenceEnabled, false, "Turn on forwarding events to BigTable")
+	bigTableGCPProject = NodeCmd.Flags().String(FlagBigTableGCPProject, "", "Google Cloud project ID for storing events")
+	bigTableInstanceName = NodeCmd.Flags().String(FlagBigTableInstanceName, "", "BigTable instance name for storing events")
+	bigTableTableName = NodeCmd.Flags().String(FlagBigTableTableName, "", "BigTable table name to store events in")
+	bigTableKeyPath = NodeCmd.Flags().String(FlagBigTableKeyPath, "", "Path to json Service Account key")
 }
 
 var (
@@ -292,65 +346,65 @@ func runNode(cmd *cobra.Command, args []string) {
 	// Verify flags
 
 	if *nodeKeyPath == "" && !*unsafeDevMode { // In devnet mode, keys are deterministically generated.
-		logger.Fatal("Please specify --nodeKey")
+		logger.With(zap.String("flag", FlagNodeKey)).Fatal("please specify required flag")
 	}
 	if *guardianKeyPath == "" {
-		logger.Fatal("Please specify --guardianKey")
+		logger.With(zap.String("flag", FlagGuardianKeyPath)).Fatal("please specify required flag")
 	}
 	if *adminSocketPath == "" {
-		logger.Fatal("Please specify --adminSocket")
+		logger.With(zap.String("flag", FlagAdminSocketPath)).Fatal("please specify required flag")
 	}
 	if *dataDir == "" {
-		logger.Fatal("Please specify --dataDir")
+		logger.With(zap.String("flag", FlagDataDir)).Fatal("please specify required flag")
 	}
 	if *ethRPC == "" {
-		logger.Fatal("Please specify --ethRPC")
+		logger.With(zap.String("flag", FlagEthRPC)).Fatal("please specify required flag")
 	}
 	if *ethContract == "" {
-		logger.Fatal("Please specify --ethContract")
+		logger.With(zap.String("flag", FlagEthContract)).Fatal("please specify required flag")
 	}
 	if *bscRPC == "" {
-		logger.Fatal("Please specify --bscRPC")
+		logger.With(zap.String("flag", FlagBscRPC)).Fatal("please specify required flag")
 	}
 	if *bscContract == "" {
-		logger.Fatal("Please specify --bscContract")
+		logger.With(zap.String("flag", FlagBscContract)).Fatal("please specify required flag")
 	}
 	if *nodeName == "" {
-		logger.Fatal("Please specify --nodeName")
+		logger.With(zap.String("flag", FlagNodeName)).Fatal("please specify required flag")
 	}
 
 	if *solanaContract == "" {
-		logger.Fatal("Please specify --solanaContract")
+		logger.With(zap.String("flag", FlagSolanaContract)).Fatal("please specify required flag")
 	}
 	if *solanaWsRPC == "" {
-		logger.Fatal("Please specify --solanaWsUrl")
+		logger.With(zap.String("flag", FlagSolanaWsRPC)).Fatal("please specify required flag")
 	}
 	if *solanaRPC == "" {
-		logger.Fatal("Please specify --solanaUrl")
+		logger.With(zap.String("flag", FlagSolanaRPC)).Fatal("please specify required flag")
 	}
 
 	if *terraWS == "" {
-		logger.Fatal("Please specify --terraWS")
+		logger.With(zap.String("flag", FlagTerraWS)).Fatal("please specify required flag")
 	}
 	if *terraLCD == "" {
-		logger.Fatal("Please specify --terraLCD")
+		logger.With(zap.String("flag", FlagTerraLCD)).Fatal("please specify required flag")
 	}
 	if *terraContract == "" {
-		logger.Fatal("Please specify --terraContract")
+		logger.With(zap.String("flag", FlagTerraContract)).Fatal("please specify required flag")
 	}
 
 	if *bigTablePersistenceEnabled {
 		if *bigTableGCPProject == "" {
-			logger.Fatal("Please specify --bigTableGCPProject")
+			logger.With(zap.String("flag", FlagBigTableGCPProject)).Fatal("please specify required flag")
 		}
 		if *bigTableInstanceName == "" {
-			logger.Fatal("Please specify --bigTableInstanceName")
+			logger.With(zap.String("flag", FlagBigTableInstanceName)).Fatal("please specify required flag")
 		}
 		if *bigTableTableName == "" {
-			logger.Fatal("Please specify --bigTableTableName")
+			logger.With(zap.String("flag", FlagBigTableTableName)).Fatal("please specify required flag")
 		}
 		if *bigTableKeyPath == "" {
-			logger.Fatal("Please specify --bigTableKeyPath")
+			logger.With(zap.String("flag", FlagBigTableKeyPath)).Fatal("please specify required flag")
 		}
 	}
 
